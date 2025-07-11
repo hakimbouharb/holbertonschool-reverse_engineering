@@ -1,1 +1,1 @@
-readelf -S task0 | grep .comment
+readelf -S task1
