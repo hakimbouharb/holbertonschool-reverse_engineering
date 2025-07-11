@@ -1,27 +1,32 @@
 #!/bin/bash
 
-# Load the display function
-source ./messages.sh
+# Check if file argument is provided
+if [ -z "$1" ]; then
+    echo "Usage: $0 <ELF file>"
+    exit 1
+fi
 
 file_name="$1"
 
 # Check if file exists
-if [[ ! -f "$file_name" ]]; then
+if [ ! -f "$file_name" ]; then
     echo "Error: File '$file_name' does not exist."
     exit 1
 fi
 
-# Check if file is an ELF
+# Check if file is an ELF file
 if ! file "$file_name" | grep -q "ELF"; then
-    echo "Error: File '$file_name' is not a valid ELF file."
+    echo "Error: '$file_name' is not a valid ELF file."
     exit 1
 fi
 
-# Extract required info from ELF header
-magic_number=$(hexdump -n 4 -e '4/1 "%02x "' "$file_name")
-class=$(readelf -h "$file_name" | grep "Class:" | awk '{print $2}')
-byte_order=$(readelf -h "$file_name" | grep "Data:" | awk '{print $2, $3}')
+# Extract ELF header information
+magic_number=$(readelf -h "$file_name" | grep "Magic:" | awk '{for(i=2; i<=NF; i++) printf "%s ", $i; print ""}' | sed 's/ $//')
+class=$(readelf -h "$file_name" | grep "Class:" | awk '{print $2, $3}' | sed 's/ $//')
+byte_order=$(readelf -h "$file_name" | grep "Data:" | awk '{print $4, $5}')
 entry_point_address=$(readelf -h "$file_name" | grep "Entry point address:" | awk '{print $4}')
 
-# Show output
+# Source the messages.sh script (ensure it's in the same directory)
+source ./messages.sh
+
 display_elf_header_info
